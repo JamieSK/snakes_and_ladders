@@ -1,86 +1,54 @@
-require_relative 'movers'
 require_relative 'player'
 require_relative 'board'
 require_relative 'die_six'
 
+# A game of snakes and ladders class.
 class Game
-  attr_accessor :jamie, :board, :players
-
   def initialize
     @board = Board.new
     @jamie = Player.new('Jamie')
     @alex = Player.new('Alex')
     @die = DieSix.new
     @players = [@alex, @jamie]
-    @board.add_to_square(0, @alex)
-    @board.add_to_square(0, @jamie)
   end
 
-  def inspect_square(square)
-    @board.square_contents(square)
+  def move_player(player_index)
+    roll_and_move(player_index)
+
+    check_for_redirect(player_index)
+
+    check_for_win_and_puts(player_index)
   end
 
-  def move_player(player)
-    obstruction = ''
-
-    puts "Roll die #{player.name}?"
+  def roll_and_move(player_index)
+    puts "Roll die #{@players[player_index].name}?"
     gets.chomp
-    move = turn_taker(player)
 
-    return nil if win_check(move[1], player, move, obstruction)
-
-    @board.move_from_to(move[0], move[1], player)
-    player.square = move[1]
-
-    @board.square_contents(move[1]).each { |element|
-      if element.class == Mover
-        obstruction = check_for_mover(element, player, move, obstruction)
-      end
-    }
-
-    printout(player, move, obstruction)
-    true
+    @roll = @die.roll
+    @old_square = @players[player_index].square
+    @next_square = @board.square_contents(@old_square + @roll)
   end
 
-  def win_check(new_square, player, move, obstruction)
-    if new_square >= 100
-      printout(player, move, obstruction)
-      endgame(player)
-      @not_finished = false
-      return true
-    end
-    false
-  end
-
-  def check_for_mover(element, player, move, obstruction)
-    move[1] = element.finish
-    @board.move_from_to(move[0], move[1], player)
-    player.square = move[1]
-
-    return obstruction = snake_or_ladder(move[1], move[0])
-  end
-
-  def printout(player, move, obstruction)
-    puts "#{player.name}, you moved #{move[2]},#{obstruction} now you're on square #{move[1]}!"
-  end
-
-  def turn_taker(player)
-    current_square = player.square
-    die_roll = player.take_turn(@die)
-    new_square = current_square + die_roll
-    return [current_square, new_square, die_roll]
-  end
-
-  def snake_or_ladder(new_square, current_square)
-    if new_square > current_square
-      return ' (Hit a ladder!)'
+  def check_for_redirect(player_index)
+    if @next_square.class == Integer
+      @players[player_index].square = @old_square + @roll
+      @changer = ''
     else
-      return' (Hit a snake)'
+      @players[player_index].square = @next_square.to_i
+      up_or_down = @next_square[@players[player_index].square.to_s.length..-1]
+      @changer = "(You hit a #{up_or_down}!)"
     end
   end
 
-  def endgame(winner)
-    puts "#{winner.name}, you're the winner!!!"
+  def check_for_win_and_puts(player_index)
+    if @players[player_index].square == 100
+      puts "#{@players[player_index].name}, you rolled a #{@roll}, you won!"
+      nil
+    else
+      puts "#{@players[player_index].name}, you moved #{@roll},"\
+           "#{@changer} now you're on square #{@players[player_index].square}!"
+      true
+    end
   end
 end
 
@@ -89,11 +57,9 @@ end
 
 def lets_play_a_game
   while @not_finished
-    @snake_and_ladders.players.each { |player|
-      if @snake_and_ladders.move_player(player) == nil
-        return nil
-      end
-    }
+    (0..1).each do |player_index|
+      return nil if @snake_and_ladders.move_player(player_index).nil?
+    end
   end
 end
 

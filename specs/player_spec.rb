@@ -4,6 +4,7 @@ require 'minitest/rg'
 require_relative '../die_six'
 require_relative '../player'
 
+# Tests the player of snakes and ladders class.
 class TestPlayer < MiniTest::Test
   def setup
     @die = DieSix.new
@@ -11,6 +12,6 @@ class TestPlayer < MiniTest::Test
   end
 
   def test_take_turn
-    assert((1..6).include?(@player.take_turn(@die)))
+    assert((1..6).cover?(@player.take_turn(@die)))
   end
 end
