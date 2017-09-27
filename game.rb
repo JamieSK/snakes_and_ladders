@@ -7,9 +7,9 @@ class Game
   def initialize
     @board = Board.new
     @jamie = Player.new('Jamie')
-    @alex = Player.new('Alex')
+    @imogen = Player.new('Imogen')
     @die = DieSix.new
-    @players = [@alex, @jamie]
+    @players = [@imogen, @jamie]
   end
 
   def move_player(player_index)
